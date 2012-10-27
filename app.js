@@ -1,4 +1,3 @@
-
 //
 // Load the FB SDK Asynchronously
 //
@@ -21,11 +20,38 @@ var appobj = {};
 (function(app) {
     var appName = 'Facebook API Tester';
     var version = '0.2';
-    var fbappid = 484266044928297;
+    var fbAppId = '484266044928297';
+    var fbAccessToken = '';
+    var fbLoggedInUserAccessToken = '';
+    
+    // if you have a need to use an application access token then add your 
+    // secret id below.  NOTE: DO NOT publicly post this code or otherwise
+    // use it in a production setting.
+    var fbSecretId = ''; 
     
     app.getFBAppId = function() {
-        return fbappid;
-    }
+        return fbAppId;
+    };
+    
+    app.getFBSecretId = function() {
+        return fbSecretId;
+    };
+    
+    app.setFBAccessToken = function(token) {
+        fbAccessToken = token;
+    };
+    
+    app.getFBAccessToken = function() {
+        return fbAccessToken;
+    };
+    
+    app.setLoggedInUserAccessToken = function(token) {
+        fbLoggedInUserAccessToken = token;
+    };
+    
+    app.getLoggedInUserAccessToken = function() {
+        return fbLoggedInUserAccessToken;
+    };
     
     // safe logging using console.log() for browsers that don't support it
     app.log = function(obj) {
@@ -37,6 +63,22 @@ var appobj = {};
     // display our test app version
     app.init = function() {
         app.log(appName + ' ' + version);
+        if (app.getFBSecretId() !== '') {
+            // get application token
+            var url = 'https://graph.facebook.com/oauth/access_token?client_id=' + app.getFBAppId() + 
+                      '&client_secret=' + app.getFBSecretId() + 
+                      '&grant_type=client_credentials';
+            app.log('Attempting to retrieve application access token via: ' + url);
+            $.ajax({
+                url: url,
+                type: 'POST',
+                success: (function(result) {
+                    var preTokenArray = result.split('=');
+                    app.setFBAccessToken(preTokenArray[1]);
+                    app.log("Access Token = [" + app.getFBAccessToken() + "]");
+                })
+            });
+        }
     };
 
     // prompt user to log into Facebook and accept our test app
@@ -44,6 +86,7 @@ var appobj = {};
         FB.login(function(response) {
             if (response.authResponse) {
                 app.log('Welcome!  Fetching your information.... ');
+                app.setLoggedInUserAccessToken(response.authResponse.accessToken);                
                 FB.api('/me', function(response) {
                     app.log('Good to see you, ' + response.name);
                 });    
@@ -53,7 +96,7 @@ var appobj = {};
                 app.log('User cancelled login or did not fully authorize.');
             }
         }, {
-            scope: 'email, user_likes, friends_likes, publish_actions, publish_stream, user_games_activity, friends_games_activity'
+            scope: 'email, user_likes, friends_likes, publish_actions, publish_stream, user_games_activity, friends_games_activity, manage_notifications'
         });
     };
 
@@ -62,8 +105,13 @@ var appobj = {};
     app.preAPITest = function() {
         // Additional init code here
         FB.getLoginStatus(function(response) {
+            app.log('getLoginStatus: ' + JSON.stringify(response));
             if (response.status === 'connected') {
                 app.log('Logged into Facebook, ready to test APIs...');
+                app.setLoggedInUserAccessToken(response.authResponse.accessToken);
+                FB.api('/me', function(response) {
+                    app.log('Welcome back, ' + response.name);
+                });                    
                 app.testAPIs();
             }
             else if (response.status === 'not_authorized') {
@@ -81,7 +129,7 @@ var appobj = {};
     
     // call apis 
     app.testAPIs = function() {
-        app.sendInvite('Join me in seeing this work!', '1200172369');
+        app.sendInvite2('Join me in seeing this work', '1200172369');
     };
 
     // send fb invite(s)
@@ -91,7 +139,6 @@ var appobj = {};
             message: message,
             to: fb_friends
         };
-
         FB.ui(obj, function(response) {            
             if (!response) {
                 app.log('Unknown error');
@@ -118,6 +165,23 @@ var appobj = {};
         });
     };
 
+    // send fb invite(s) using newer notification graph API
+    app.sendInvite2 = function(message, fb_friend) {
+        var url = '/' + fb_friend + 
+                  '/notifications?access_token=' + app.getLoggedInUserAccessToken() + '&href=' +
+                  encodeURIComponent('"https://someplace.org/facebook"') + 
+                  '&template=' + encodeURIComponent('"' + message + '"') + '&method=post';
+        app.log('Attempting to post invite to: ' + url);
+        FB.api(url, function(response) {
+            var json = JSON.stringify(response);
+            if (response.error) {
+                app.log('Error invite wasn\'t sent: ' + json);
+            } else {
+                app.log('Invite sent: ' + json);
+            }
+        });
+    };
+
 })(appobj);
 
 //
@@ -136,3 +200,4 @@ $(document).ready(function() {
         appobj.preAPITest();
     };
 });
+
