@@ -103,6 +103,10 @@ var FBAPITester = {};
     // before we can test FB APIs let's make sure that the user is logged in
     // otherwise prompt user to log in.
     function preAPITest() {
+        handleLogin();
+    }
+    
+    function handleLogin() {
         // Additional init code here
         FB.getLoginStatus(function(response) {
             log('getLoginStatus: ' + JSON.stringify(response));
@@ -176,9 +180,21 @@ var FBAPITester = {};
         });
     }
 
+    function logout() {
+        log('Attempting to logout');
+        FB.getLoginStatus(function(response) {
+            if (response.status === 'connected') {
+                FB.logout(function(response) {
+                    log('User is now logged out');
+                });
+            }
+        });
+    }
+            
     // call apis 
     app.testAPIs = function() {
-        sendInvite2('Join me in seeing this work', '1200172369');
+        //sendInvite2('Join me in seeing this work', '1200172369');
+        logout();
     };
     
 })(FBAPITester);
