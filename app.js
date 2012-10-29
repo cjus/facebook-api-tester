@@ -165,6 +165,8 @@ var FBAPITester = {};
 
     // send fb invite(s) using newer notification graph API
     function sendInvite2(message, fb_friend) {
+        log('Attempting to send a notification...');
+        log('FB User Access token: ' + getLoggedInUserAccessToken());
         var url = '/' + fb_friend + 
                   '/notifications?access_token=' + getLoggedInUserAccessToken() + '&href=' +
                   encodeURIComponent('"https://someplace.org/facebook"') + 
@@ -181,6 +183,8 @@ var FBAPITester = {};
     }
 
     function logout() {
+        // http://developers.facebook.com/docs/reference/javascript/FB.logout/
+        // http://facebook.stackoverflow.com/questions/8430474/fb-logout-called-without-an-access-token
         log('Attempting to logout');
         FB.getLoginStatus(function(response) {
             if (response.status === 'connected') {
@@ -193,8 +197,9 @@ var FBAPITester = {};
             
     // call apis 
     app.testAPIs = function() {
+        sendInvite('Join me in seeing this work', '1200172369');
         //sendInvite2('Join me in seeing this work', '1200172369');
-        logout();
+        //logout();
     };
     
 })(FBAPITester);
