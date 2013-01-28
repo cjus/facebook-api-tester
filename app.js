@@ -19,7 +19,7 @@
 var FBAPITester = {};
 (function(app) {
     var appName = 'Facebook API Tester';
-    var version = '0.2';
+    var version = '0.3';
     var fbAppId = '484266044928297';
     var fbAccessToken = '';
     var fbLoggedInUserAccessToken = '';
@@ -65,7 +65,7 @@ var FBAPITester = {};
         log(appName + ' ' + version);
         if (getFBSecretId() !== '') {
             // get application token
-            var url = 'https://graph.facebook.com/oauth/access_token?client_id=' + api.getFBAppId() + 
+            var url = 'https://graph.facebook.com/oauth/access_token?client_id=' + app.getFBAppId() + 
                       '&client_secret=' + getFBSecretId() + 
                       '&grant_type=client_credentials';
             log('Attempting to retrieve application access token via: ' + url);
@@ -80,6 +80,13 @@ var FBAPITester = {};
             });
         }
         preAPITest();
+        $('.fb-like').css('overflow', 'auto')
+            .css('position', 'absolute')
+            .css('top', 100)
+            .css('right',200)
+            .css('width', 'auto')
+            .css('z-index', 10000);
+ 
     };
 
     // prompt user to log into Facebook and accept our test app
@@ -194,10 +201,10 @@ var FBAPITester = {};
             }
         });
     }
-            
+     
     // call apis 
     app.testAPIs = function() {
-        sendInvite('Join me in seeing this work', '1200172369');
+        sendInvite('Join me in seeing this work', '100003327077394');
         //sendInvite2('Join me in seeing this work', '1200172369');
         //logout();
     };
@@ -219,4 +226,6 @@ $(document).ready(function() {
         FBAPITester.init();
     };
 });
+
+ 
 
